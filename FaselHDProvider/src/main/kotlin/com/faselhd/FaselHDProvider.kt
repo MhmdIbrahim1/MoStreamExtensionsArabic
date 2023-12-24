@@ -83,7 +83,7 @@ class FaselHD : MainAPI() {
         val posterUrl = doc.select("div.posterImg img").attr("src")
             .ifEmpty { doc.select("div.seasonDiv.active img").attr("data-src") }
 
-        val year = doc.select("div[id=\"singleList\"] div[class=\"col-xl-6 col-lg-6 col-md-6 col-sm-6\"]").firstOrNull {
+        val year = doc.select("div[id=\"singleList\"] div[class=\"col-xl-2 col-lg-2 col-md-3 col-sm-3\"]").firstOrNull {
             it.text().contains("سنة|موعد".toRegex())
         }?.text()?.getIntFromText()
 
@@ -91,11 +91,11 @@ class FaselHD : MainAPI() {
             doc.select("title").text().replace(" - فاصل إعلاني", "")
                 .replace("الموسم الأول|برنامج|فيلم|مترجم|اون لاين|مسلسل|مشاهدة|انمي|أنمي|$year".toRegex(),"")
         // A bit iffy to parse twice like this, but it'll do.
-        val duration = doc.select("div[id=\"singleList\"] div[class=\"col-xl-6 col-lg-6 col-md-6 col-sm-6\"]").firstOrNull {
+        val duration = doc.select("div[id=\"singleList\"] div[class=\"col-xl-2 col-lg-2 col-md-3 col-sm-3\"]").firstOrNull {
             it.text().contains("مدة|توقيت".toRegex())
         }?.text()?.getIntFromText()
 
-        val tags = doc.select("div[id=\"singleList\"] div[class=\"col-xl-6 col-lg-6 col-md-6 col-sm-6\"]:contains(تصنيف الفيلم) a").map {
+        val tags = doc.select("div[id=\"singleList\"] div[class=\"col-xl-2 col-lg-2 col-md-3 col-sm-3\"]:contains(تصنيف الفيلم) a").map {
             it.text()
         }
         val recommendations = doc.select("div#postList div.postDiv").mapNotNull {
