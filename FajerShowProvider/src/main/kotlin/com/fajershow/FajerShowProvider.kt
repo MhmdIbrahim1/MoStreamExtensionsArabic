@@ -27,7 +27,7 @@ class FajerShow : MainAPI() {
 
     private fun Element.toSearchResponse(home: Boolean): SearchResponse? {
         val quality = select("span.quality").text().replace("-|p".toRegex(), "")
-        if(home == true) {
+        if(home) {
             val titleElement = select("div.data h3 a")
             val posterUrl = select("img").attr("src")
             val tvType = if (titleElement.attr("href").contains("/movies/")) TvType.Movie else TvType.TvSeries

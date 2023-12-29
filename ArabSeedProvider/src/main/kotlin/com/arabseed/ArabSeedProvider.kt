@@ -7,7 +7,7 @@ import org.jsoup.nodes.Element
 
 class ArabSeed : MainAPI() {
     override var lang = "ar"
-    override var mainUrl = "https://m5.arabseed.ink"
+    override var mainUrl = "https://arabseed.show/"
     override var name = "ArabSeed"
     override val usesWebView = false
     override val hasMainPage = true
@@ -66,8 +66,8 @@ class ArabSeed : MainAPI() {
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val doc = app.get(url, timeout = 120).document
-        val title = doc.select("h1.Title").text().ifEmpty { doc.select("div.Title").text() }
+        val doc = app.get(url, timeout = 5000).document
+        val title = doc.title()
         val isMovie = title.contains("فيلم")
 
         val posterUrl = doc.select("div.Poster > img").let{ it.attr("data-src").ifEmpty { it.attr("src") } }
@@ -152,7 +152,7 @@ class ArabSeed : MainAPI() {
         val watchUrl = doc.select("a.watchBTn").attr("href")
         val watchDoc = app.get(watchUrl, headers = mapOf("Referer" to mainUrl)).document
         val indexOperators = arrayListOf<Int>()
-        val list: List<Element> = watchDoc.select("ul > li[data-link], ul > h3").mapIndexed { index, element ->
+        val list: List<Element> = watchDoc.select("ul > li[data-link], ul > h3").mapIndexed {index, element ->
             if(element.`is`("h3")) {
                 indexOperators.add(index)
                 element
@@ -172,7 +172,7 @@ class ArabSeed : MainAPI() {
             links.apmap {
                 val iframeUrl = it.attr("data-link")
                 println(iframeUrl)
-                if(it.text().contains("عرب سيد")) {
+                if(it.text().contains("سيرفر")) {
                     val sourceElement = app.get(iframeUrl).document.select("source")
                     callback.invoke(
                         ExtractorLink(
@@ -180,33 +180,9 @@ class ArabSeed : MainAPI() {
                             "ArabSeed",
                             sourceElement.attr("src"),
                             data,
-                            if(quality != 0) quality else it.text().replace(".*- ".toRegex(), "").replace("\\D".toRegex(),"").toInt(),
+                            if(quality != 0) quality else it.text().replace(".*- ".toRegex(), "")
+                                .replace("\\D".toRegex(),"").toInt(),
                             !sourceElement.attr("type").contains("mp4")
-                        )
-                    )
-                } else if (iframeUrl.contains("voe.sx")) {
-                    val doc = app.get(iframeUrl).document
-                    val script = doc.select("script").map { it.data() }.first { it.contains("sources") }
-                    val m3u8 = script.substringAfter("'hls': '").substringBefore("'")
-                    val mp4 = script.substringAfter("'mp4': '").substringBefore("'")
-                    val voeSxquality = script.substringAfter("'video_height': ").substringBefore(",").toInt()
-                    callback.invoke(
-                        ExtractorLink(
-                            this.name,
-                            "Voe.sx m3u8",
-                            m3u8,
-                            data,
-                            voeSxquality,
-                            true
-                        )
-                    )
-                    callback.invoke(
-                        ExtractorLink(
-                            this.name,
-                            "Voe.sx mp4",
-                            mp4,
-                            data,
-                            voeSxquality,
                         )
                     )
                 } else loadExtractor(iframeUrl, data, subtitleCallback, callback)
@@ -214,4 +190,5 @@ class ArabSeed : MainAPI() {
         }
         return true
     }
+
 }

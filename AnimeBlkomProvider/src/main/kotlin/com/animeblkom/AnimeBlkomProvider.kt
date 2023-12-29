@@ -106,6 +106,62 @@ class AnimeBlkom : MainAPI() {
             showStatus = status
         }
     }
+//    override suspend fun loadLinks(
+//        data: String,
+//        isCasting: Boolean,
+//        subtitleCallback: (SubtitleFile) -> Unit,
+//        callback: (ExtractorLink) -> Unit
+//    ): Boolean {
+//        val doc = app.get(data).document
+//        doc.select("div.item a[data-src]").map {
+//            it.attr("data-src").let { url ->
+//                if(url.startsWith("https://animetitans.net/")) {
+//                    val iframe = app.get(url).document
+//                    callback.invoke(
+//                        ExtractorLink(
+//                            this.name,
+//                            "Animetitans " + it.text(),
+//                            iframe.select("script").last()?.data()?.substringAfter("source: \"")?.substringBefore("\"").toString(),
+//                            this.mainUrl,
+//                            Qualities.Unknown.value,
+//                            isM3u8 = true
+//                        )
+//                    )
+//                } else if(it.text() == "Blkom") {
+//                    val iframe = app.get(url).document
+//                    iframe.select("source").forEach { source ->
+//                        callback.invoke(
+//                            ExtractorLink(
+//                                this.name,
+//                                it.text(),
+//                                source.attr("src"),
+//                                this.mainUrl,
+//                                source.attr("res").toInt()
+//                            )
+//                        )
+//                    }
+//                } else {
+//                    var sourceUrl = url
+//                    if(it.text().contains("Google")) sourceUrl = "http://gdriveplayer.to/embed2.php?link=$url"
+//                    loadExtractor(sourceUrl, mainUrl, subtitleCallback, callback)
+//                }
+//            }
+//        }
+//        doc.select(".panel .panel-body a").apmap {
+//            println(it.text())
+//            callback.invoke(
+//                ExtractorLink(
+//                    this.name,
+//                    it.attr("title") + " " + it.select("small").text() + " Download Source",
+//                    it.attr("href"),
+//                    this.mainUrl,
+//                    it.text().replace("p.*| ".toRegex(),"").toInt(),
+//                )
+//            )
+//        }
+//        return true
+//    }
+
     override suspend fun loadLinks(
         data: String,
         isCasting: Boolean,
@@ -113,39 +169,33 @@ class AnimeBlkom : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         val doc = app.get(data).document
-        doc.select("div.item a[data-src]").map {
-            it.attr("data-src").let { url ->
-                if(url.startsWith("https://animetitans.net/")) {
-                    val iframe = app.get(url).document
-                    callback.invoke(
-                        ExtractorLink(
-                            this.name,
-                            "Animetitans " + it.text(),
-                            iframe.select("script").last()?.data()?.substringAfter("source: \"")?.substringBefore("\"").toString(),
-                            this.mainUrl,
-                            Qualities.Unknown.value,
-                            isM3u8 = true
-                        )
-                    )
-                } else if(it.text() == "Blkom") {
-                    val iframe = app.get(url).document
-                    iframe.select("source").forEach { source ->
-                        callback.invoke(
-                            ExtractorLink(
-                                this.name,
-                                it.text(),
-                                source.attr("src"),
-                                this.mainUrl,
-                                source.attr("res").toInt()
-                            )
-                        )
-                    }
-                } else {
-                    var sourceUrl = url
-                    if(it.text().contains("Google")) sourceUrl = "http://gdriveplayer.to/embed2.php?link=$url"
-                    loadExtractor(sourceUrl, mainUrl, subtitleCallback, callback)
-                }
-            }
+
+        // Check for video sources within an iframe
+        doc.select("iframe.video").firstOrNull()?.let { iframe ->
+            val iframeSrc = iframe.attr("src")
+            callback.invoke(
+                ExtractorLink(
+                    this.name,
+                    "External Video",
+                    iframeSrc,
+                    this.mainUrl,
+                    Qualities.Unknown.value,
+                    isM3u8 = false
+                )
+            )
+        }
+
+        // Check for direct video sources within a video tag
+        doc.select("video#video_html5_api source").forEach { source ->
+            callback.invoke(
+                ExtractorLink(
+                    this.name,
+                    "Direct",
+                    source.attr("src"),
+                    this.mainUrl,
+                    source.attr("res").toInt()
+                )
+            )
         }
         doc.select(".panel .panel-body a").apmap {
             println(it.text())
@@ -155,10 +205,12 @@ class AnimeBlkom : MainAPI() {
                     it.attr("title") + " " + it.select("small").text() + " Download Source",
                     it.attr("href"),
                     this.mainUrl,
-                    it.text().replace("p.*| ".toRegex(),"").toInt(),
+                    it.text().replace("p.*| ".toRegex(), "").toInt(),
                 )
             )
         }
+
         return true
     }
+
 }

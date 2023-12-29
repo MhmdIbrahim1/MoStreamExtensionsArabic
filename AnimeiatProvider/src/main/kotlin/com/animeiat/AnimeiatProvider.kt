@@ -119,20 +119,20 @@ class Animeiat : MainAPI() {
         val request = loadSession.get(url.replace(pageUrl, mainUrl)).text
         val json = parseJson<Load>(request)
         val episodes = arrayListOf<Episode>()
-        (1..parseJson<Episodes>(loadSession.get("$url/episodes").text).meta.lastPage!!).map { pageNumber ->
-            parseJson<Episodes>(loadSession.get("$url/episodes?page=$pageNumber").text).data.map {
-                episodes.add(
-                    Episode(
-                        "$pageUrl/watch/"+json.data?.slug,
-                        it.title,
-                        null,
-                        it.number,
-                        "https://api.animeiat.co/storage/" + it.posterPath,
-
-                    )
-                )
-            }
-        }
+//        (1..parseJson<Episodes>(loadSession.get("$url/episodes").text).meta.lastPage!!).map { pageNumber ->
+//            parseJson<Episodes>(loadSession.get("$url/episodes?page=$pageNumber").text).data.map {
+//                episodes.add(
+//                    Episode(
+//                        "$pageUrl/watch/"+json.data?.slug,
+//                        it.title,
+//                        null,
+//                        it.number,
+//                        "https://api.animeiat.co/storage/" + it.posterPath,
+//
+//                    )
+//                )
+//            }
+//        }
         return newAnimeLoadResponse(json.data?.animeName.toString(), "$pageUrl/watch/"+json.data?.slug, if(json.data?.type == "movie") TvType.AnimeMovie else if(json.data?.type == "tv") TvType.Anime else TvType.OVA) {
             japName = json.data?.otherNames?.replace("\\n.*".toRegex(), "")
             engName = json.data?.animeName
@@ -151,7 +151,7 @@ class Animeiat : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        val url = if(data.contains("-episode")) data else "$data-episode-1"
+        val url = if(data.contains("-episode")) data else "$data-episode-2"
         val doc = app.get(url).document
         val script = doc.select("body > script").first()?.html()
         val id = script?.replace(".*4\",slug:\"|\",duration:.*".toRegex(),"")
